@@ -6,7 +6,7 @@ require (
 	github.com/fiatjaf/eventstore v0.17.2
 	github.com/gzuuus/onRelay v0.1.6
 	github.com/nbd-wtf/go-nostr v0.52.1
-	github.com/pippellia-btc/rely v1.0.0-alpha
+	github.com/pippellia-btc/rely v1.0.0-beta
 )
 
 require (

@@ -78,6 +78,7 @@ func Save(c rely.Client, e *nostr.Event) error {
 		return saveReplaceableEvent(ctx, e)
 
 	default:
+		log.Printf("[INFO] Unhandled event kind: %d", e.Kind)
 		return fmt.Errorf("unhandled event kind: %d", e.Kind)
 	}
 }
