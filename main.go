@@ -34,8 +34,8 @@ func main() {
 
 	buffer = atomic.NewAtomicCircularBuffer(500)
 	relay := rely.NewRelay()
-	relay.OnEvent = Save
-	relay.OnReq = Query
+	relay.On.Event = Save
+	relay.On.Req = Query
 	addr := fmt.Sprintf("localhost:%s", port)
 	log.Printf("[INFO] Running relay on %s", addr)
 
