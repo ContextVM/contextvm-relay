@@ -14,14 +14,22 @@ import (
 )
 
 var (
-	db     lmdb.LMDBBackend
-	buffer *atomic.AtomicCircularBuffer
+	db      lmdb.LMDBBackend
+	buffer  *atomic.AtomicCircularBuffer
+	version = "dev" // set via -ldflags at build time
 )
 
 func main() {
 	var port string
+	var showVersion bool
 	flag.StringVar(&port, "port", "3334", "Port to run the relay on")
+	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("contextvm-relay version %s\n", version)
+		return
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -37,7 +45,7 @@ func main() {
 	relay.On.Event = Save
 	relay.On.Req = Query
 	addr := fmt.Sprintf("localhost:%s", port)
-	log.Printf("[INFO] Running relay on %s", addr)
+	log.Printf("[INFO] Running relay %s on %s", version, addr)
 
 	if err := relay.StartAndServe(ctx, addr); err != nil {
 		panic(err)
