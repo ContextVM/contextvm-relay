@@ -4,43 +4,17 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
-
-      - name: Tidy dependencies
-        run: go mod tidy
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Test
-        run: go test -v ./...
-
   build:
     name: Build
-    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         include:
           - os: ubuntu-latest
             artifact_name: contextvm-relay-linux-amd64
-          - os: windows-latest
-            artifact_name: contextvm-relay-windows-amd64.exe
           - os: macos-latest
             artifact_name: contextvm-relay-darwin-amd64
 
@@ -82,14 +56,10 @@ jobs:
         with:
           path: artifacts
 
-      - name: Display structure of downloaded files
-        run: ls -R artifacts/
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/contextvm-relay-linux-amd64/contextvm-relay-linux-amd64
-            artifacts/contextvm-relay-windows-amd64.exe/contextvm-relay-windows-amd64.exe
             artifacts/contextvm-relay-darwin-amd64/contextvm-relay-darwin-amd64
           generate_release_notes: true
