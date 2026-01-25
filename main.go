@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/fiatjaf/eventstore/lmdb"
 	"github.com/gzuuus/onRelay/atomic"
@@ -31,9 +33,9 @@ func main() {
 		return
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	go rely.HandleSignals(cancel)
+
 	db = lmdb.LMDBBackend{Path: "./db/"}
 	os.MkdirAll(db.Path, 0o755)
 	if err := db.Init(); err != nil {
@@ -74,7 +76,7 @@ func Save(c rely.Client, e *nostr.Event) error {
 		log.Printf("[INFO] Gift wrap event stored: %s", e.ID)
 		return nil
 
-	case nostr.IsReplaceableKind(e.Kind):
+	case nostr.IsReplaceableKind(e.Kind) || nostr.IsAddressableKind(e.Kind):
 		return saveReplaceableEvent(ctx, e)
 
 	default:
