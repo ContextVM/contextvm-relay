@@ -8,6 +8,9 @@ check:
 	go fmt ./...
 	go test ./...
 
+update-deps: 
+	go get -u ./...
+	
 major:
 	@$(eval NEW_VERSION := $(shell echo $(VERSION) | awk -F. '{print $$1+1".0.0"}'))
 	@git tag -a v$(NEW_VERSION) -m "Release v$(NEW_VERSION)"

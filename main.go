@@ -47,6 +47,14 @@ func main() {
 	relay.On.Event = Save
 	relay.On.Req = Query
 	addr := fmt.Sprintf("localhost:%s", port)
+	cfg := loadHeartbeatConfig(port)
+	if cfg.Enabled {
+		hb := newHeartbeatManager(cfg)
+		go hb.run(ctx)
+		log.Printf("[INFO] Heartbeat cleanup enabled (interval=%s threshold=%d relay=%s)", cfg.Interval, cfg.FailThreshold, cfg.RelayURL)
+	} else {
+		log.Printf("[INFO] Heartbeat cleanup disabled")
+	}
 	log.Printf("[INFO] Running relay %s on %s", version, addr)
 
 	if err := relay.StartAndServe(ctx, addr); err != nil {
