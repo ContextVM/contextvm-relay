@@ -1,0 +1,3 @@
+[submodule "contextvm-docs"]
+	path = contextvm-docs
+	url = https://github.com/contextvm/contextvm-docs
