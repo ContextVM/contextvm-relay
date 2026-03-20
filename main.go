@@ -67,12 +67,7 @@ func Save(c rely.Client, e *nostr.Event) error {
 	ctx := context.Background()
 	switch {
 	case nostr.IsEphemeralKind(e.Kind):
-		err := buffer.SaveEvent(ctx, e)
-		if err != nil {
-			log.Printf("[ERROR] storing ephemeral event: %v", err)
-			return err
-		}
-		log.Printf("[INFO] Ephemeral event stored: %s", e.ID)
+		log.Printf("[INFO] Ephemeral event accepted for live dispatch only: %s", e.ID)
 		return nil
 
 	case e.Kind == nostr.KindGiftWrap:
@@ -103,18 +98,20 @@ func saveReplaceableEvent(ctx context.Context, e *nostr.Event) error {
 	return nil
 }
 
-func Query(ctx context.Context, c rely.Client, filters nostr.Filters) ([]nostr.Event, error) {
+func Query(ctx context.Context, c rely.Client, subscriptionID string, filters nostr.Filters) ([]nostr.Event, error) {
 	log.Printf("[INFO] Received query with filters: %v", filters)
 	result := make([]nostr.Event, 0)
 
 	for _, filter := range filters {
-		ephemeralEvents, err := buffer.QueryEvents(ctx, filter)
-		if err != nil {
-			log.Printf("[ERROR] querying ephemeral events: %v", err)
-		} else {
-			for _, event := range ephemeralEvents {
-				if event != nil {
-					result = append(result, *event)
+		if len(filter.Kinds) == 1 && filter.Kinds[0] == nostr.KindGiftWrap {
+			giftWrapEvents, err := buffer.QueryEvents(ctx, filter)
+			if err != nil {
+				log.Printf("[ERROR] querying gift wrap events: %v", err)
+			} else {
+				for _, event := range giftWrapEvents {
+					if event != nil {
+						result = append(result, *event)
+					}
 				}
 			}
 		}
