@@ -21,6 +21,11 @@ var (
 	version = "dev" // set via -ldflags at build time
 )
 
+const (
+	kindCVMEvent       = 25910
+	kindCVMGiftWrapped = 21059
+)
+
 func main() {
 	var port string
 	var showVersion bool
@@ -66,10 +71,6 @@ func Save(c rely.Client, e *nostr.Event) error {
 	log.Printf("[INFO] Received event (ID: %s, Kind: %d)", e.ID, e.Kind)
 	ctx := context.Background()
 	switch {
-	case nostr.IsEphemeralKind(e.Kind):
-		log.Printf("[INFO] Ephemeral event accepted for live dispatch only: %s", e.ID)
-		return nil
-
 	case e.Kind == nostr.KindGiftWrap:
 		err := buffer.SaveEvent(ctx, e)
 		if err != nil {
@@ -79,12 +80,30 @@ func Save(c rely.Client, e *nostr.Event) error {
 		log.Printf("[INFO] Gift wrap event stored: %s", e.ID)
 		return nil
 
-	case nostr.IsReplaceableKind(e.Kind) || nostr.IsAddressableKind(e.Kind):
+	case nostr.IsEphemeralKind(e.Kind):
+		if isCVMEphemeralKind(e.Kind) {
+			log.Printf("[INFO] CVM ephemeral event accepted for live dispatch only: %s", e.ID)
+			return nil
+		}
+
+		log.Printf("[WARN] rejecting non-CVM ephemeral event: %s (kind=%d)", e.ID, e.Kind)
+		return fmt.Errorf("ephemeral kind %d is not supported", e.Kind)
+
+	case nostr.IsReplaceableKind(e.Kind) || !nostr.IsAddressableKind(e.Kind):
 		return saveReplaceableEvent(ctx, e)
 
 	default:
 		log.Printf("[INFO] Unhandled event kind: %d", e.Kind)
 		return fmt.Errorf("unhandled event kind: %d", e.Kind)
+	}
+}
+
+func isCVMEphemeralKind(kind int) bool {
+	switch kind {
+	case kindCVMEvent, kindCVMGiftWrapped:
+		return true
+	default:
+		return false
 	}
 }
 
